@@ -30,6 +30,36 @@ class Brick(Item):
         )
 
 
+class Cherry(Item):
+    def __init__(self):
+        super().__init__(0, 0)
+
+    def draw(self, surface: pygame.Surface) -> None:
+        pygame.draw.ellipse(
+            surface,
+            (191, 157, 138),
+            pygame.Rect(
+                self.x,
+                self.y,
+                TILE_SIZE,
+                TILE_SIZE
+            )
+        )
+
+    def move(self, forbidden_wall, snake, width, height) -> None:
+        while True:
+            x, y = random.randint(0, width), random.randint(0, height)
+
+            for brick in forbidden_wall:
+                if brick.occupies(x, y):
+                    continue
+            if snake.occupied(x, y):
+                continue
+
+            self.x, self.y = x, y
+            break
+
+
 class Snake:
     def __init__(self, x: int, y: int) -> None:
         self._ocupies = [(x * TILE_SIZE, y * TILE_SIZE)]
@@ -43,9 +73,9 @@ class Snake:
         return self._ocupies[0]
 
     def set_direction(self, x: int, y: int) -> None:
-        if self._last_direction[0] + x != 0 and self._last_direction[1] + y != 0:
-            self._last_direction = self._direction
-            self._direction = (x, y)
+        #if self._last_direction[0] + x != 0 and self._last_direction[1] + y != 0:
+        self._last_direction = self._direction
+        self._direction = (x, y)
 
     def grow(self, n: int) -> None:
         self._grow += n
@@ -107,6 +137,9 @@ def main():
 
     snake = Snake(int(width / 2), int(height / 2))
 
+    cherry = Cherry()
+    cherry.move(wall, snake, width, height)
+
     running = True
     while running:
         screen.fill((114, 115, 110))
@@ -114,11 +147,6 @@ def main():
         # TODO: Mauer zeichnen
         for brick in wall:
             brick.draw(screen)
-
-        snake.draw(screen)
-
-        if not snake.step(wall):
-            running = False
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -143,12 +171,16 @@ def main():
             break
 
         # TODO: Schlange bewegen
+        if not snake.step(wall):
+            running = False
 
         # TODO: Schlange zeichnen
+        snake.draw(screen)
 
         # TODO: Ueberpruefen, ob die Kirsche erreicht wurde, falls ja, wachsen und Kirsche bewegen.
 
         # TODO: Kirsche zeichnen
+        cherry.draw(screen)
 
         pygame.display.flip()
         clock.tick(speed)
