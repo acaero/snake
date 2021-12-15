@@ -5,12 +5,14 @@ from typing import Optional, List, Tuple
 TILE_SIZE = 20
 
 # TODO: Spielklassen
+
+
 class Item:
     def __init__(self, x: int, y: int) -> None:
         self.x = x * TILE_SIZE
         self.y = y * TILE_SIZE
 
-    def occupies(self, x: int, y: int):
+    def occupies(self, x: int, y: int) -> bool:
         return x == self.x and y == self.y
 
 
@@ -31,7 +33,7 @@ class Brick(Item):
 
 
 class Cherry(Item):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(0, 0)
 
     def draw(self, surface: pygame.Surface) -> None:
@@ -46,18 +48,21 @@ class Cherry(Item):
             )
         )
 
-    def move(self, forbidden_wall, snake, width, height) -> None:
-        while True:
-            x, y = random.randint(0, width), random.randint(0, height)
+    def move(self, forbidden_wall: list[object], snake: object, width: int, height: int) -> None:
+        searching_spot = True
+        while searching_spot:
+            x, y = random.randint(0, width - 2), random.randint(0, height - 2)
+            x, y = x * TILE_SIZE, y * TILE_SIZE
+            searching_spot = False
 
             for brick in forbidden_wall:
                 if brick.occupies(x, y):
-                    continue
-            if snake.occupied(x, y):
-                continue
+                    searching_spot = True
 
-            self.x, self.y = x, y
-            break
+            if snake.occupied(x, y):
+                searching_spot = True
+
+        self.x, self.y = x, y
 
 
 class Snake:
@@ -73,7 +78,7 @@ class Snake:
         return self._ocupies[0]
 
     def set_direction(self, x: int, y: int) -> None:
-        #if self._last_direction[0] + x != 0 and self._last_direction[1] + y != 0:
+        # if self._last_direction != (-x, -y):
         self._last_direction = self._direction
         self._direction = (x, y)
 
@@ -81,7 +86,7 @@ class Snake:
         self._grow += n
 
     def step(self, forbidden: List) -> bool:
-        next_tile = self._ocupies[0][0] + self._direction[0]* TILE_SIZE, self._ocupies[0][1] + self._direction[1] * TILE_SIZE
+        next_tile = self._ocupies[0][0] + self._direction[0] * TILE_SIZE, self._ocupies[0][1] + self._direction[1] * TILE_SIZE
 
         if self.occupied(next_tile[0], next_tile[1]):
             return False
@@ -132,7 +137,9 @@ def main():
     wall = [Brick(x, y)
             for x in range(width)
             for y in range(height)
-            if x == 0 or x == width - 1 or y == 0 or y == height - 1 or (x == random.randint(1, width - 1) and y != int(height / 2))
+            if x == 0 or x == width - 1
+            or y == 0 or y == height - 1
+            or (x == random.randint(1, width - 1) and y != int(height / 2))
             ]
 
     snake = Snake(int(width / 2), int(height / 2))
@@ -178,6 +185,10 @@ def main():
         snake.draw(screen)
 
         # TODO: Ueberpruefen, ob die Kirsche erreicht wurde, falls ja, wachsen und Kirsche bewegen.
+        x, y = snake.get_head()
+        if cherry.occupies(x, y):
+            snake.grow(5)
+            cherry.move(wall, snake, width, height)
 
         # TODO: Kirsche zeichnen
         cherry.draw(screen)
