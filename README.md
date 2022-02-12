@@ -1,2 +1,2 @@
 # Snake
-Vorlage für eine Übungsaufgabe
+The game "Snake". An assignment for university.
